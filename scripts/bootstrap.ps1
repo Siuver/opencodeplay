@@ -60,6 +60,11 @@ function Assert-Checksum {
         throw "Invalid SHA-256 value for '$Path'. Expected 64 hexadecimal characters."
     }
 
+    if ($WhatIfPreference) {
+        Write-Host "Dry run only: skipping checksum verification for $(Split-Path -Leaf $Path)."
+        return
+    }
+
     $actual = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
     $expected = $ExpectedSha256.ToLowerInvariant()
 
