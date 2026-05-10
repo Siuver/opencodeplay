@@ -57,6 +57,35 @@
       }
     },
     {
+      "name": "opencode-dynamic-context-pruning",
+      "enabled": false,
+      "stageOnly": true,
+      "version": "3.1.11",
+      "description": "Desired opencode companion plugin for dynamic context pruning. Keep disabled until its npm tarball and package-manager cache strategy are pinned and verified for offline setup.",
+      "license": "AGPL-3.0-or-later",
+      "source": {
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/@tarquinen/opencode-dcp/-/opencode-dcp-3.1.11.tgz",
+        "package": "@tarquinen/opencode-dcp",
+        "repository": "https://github.com/Opencode-DCP/opencode-dynamic-context-pruning",
+        "releasePage": "https://github.com/Opencode-DCP/opencode-dynamic-context-pruning/releases/tag/v3.1.11",
+        "targetCommitish": "67431af80dd6fe6f8c1cad7da1a48aa11e60b515"
+      },
+      "artifact": {
+        "fileName": "opencode-dcp-3.1.11.tgz",
+        "sha256": "REPLACE_WITH_REAL_SHA256"
+      },
+      "install": {
+        "type": "copy",
+        "targetSubdir": "opencode-dcp"
+      },
+      "validate": {
+        "executable": "opencode",
+        "args": ["--version"],
+        "notes": "Planned plugin entry only. Before enabling, replace the placeholder checksum, pre-seed the npm/plugin cache or implement plugin installation, and validate DCP inside opencode. Upstream documents the online install shape as: opencode plugin @tarquinen/opencode-dcp@latest --global; use @3.1.11 when pinning."
+      }
+    },
+    {
       "name": "opencode-desktop-windows-x64",
       "enabled": false,
       "stageOnly": true,
