@@ -10,6 +10,7 @@ This runbook is written for an LLM agent operating on a fresh PC. The goal is to
 - Use online downloads only when the manifest provides a pinned URL and checksum.
 - Never invent versions, URLs, checksums, or install commands.
 - For `opencode`, prefer pinned release archives over vendored source unless source builds are explicitly required.
+- Track desired companion plugins in the manifest even when disabled, but do not enable them until their artifacts, checksums, and offline cache requirements are concrete.
 - Stop only when a required offline artifact is missing and network access is unavailable.
 
 ## Setup Flow
@@ -29,6 +30,7 @@ This runbook is written for an LLM agent operating on a fresh PC. The goal is to
 
 - Preferred offline core: CLI release archive, starter config, local plugins, and optional local MCP server definitions.
 - Online fallback only: package-manager installs, NPM plugins, provider package downloads, remote MCP OAuth, and model refreshes.
+- Desired DCP companion: `opencode-dynamic-context-pruning` from `https://github.com/Opencode-DCP/opencode-dynamic-context-pruning`, npm package `@tarquinen/opencode-dcp` version `3.1.11`. Keep disabled until `opencode-dcp-3.1.11.tgz` has a real SHA-256 and the offline plugin-cache/install path is tested.
 - Windows-first artifact candidates: `opencode-windows-x64.zip`, `opencode-windows-x64-baseline.zip`, `opencode-windows-arm64.zip`, and optional desktop installer.
 - Bootstrap-generated `.opencodeplay\env.ps1` sets `OPENCODE_DISABLE_AUTOUPDATE=1`, `OPENCODE_DISABLE_MODELS_FETCH=1`, and `OPENCODE_DISABLE_LSP_DOWNLOAD=1`.
 - Bootstrap-generated `.opencodeplay\activate-opencodeplay.ps1` dot-sources `env.ps1` and prepends the staged `opencode` directory to PATH for the current session.

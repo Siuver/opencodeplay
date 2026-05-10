@@ -10,14 +10,14 @@ The repository is intentionally agent-friendly: the README explains the desired 
 
 ## Current Status
 
-The core Windows x64 `opencode` CLI is pinned in `manifests/tools.json` and can be cached under `artifacts/` for offline installs. Optional baseline and desktop entries are documented and pinned but disabled by default. Real install or download runs refuse placeholder checksums; `-WhatIf` is the only mode that tolerates placeholders for planning.
+The core Windows x64 `opencode` CLI is pinned in `manifests/tools.json` and can be cached under `artifacts/` for offline installs. Optional baseline and desktop entries are documented and pinned but disabled by default. `opencode-dynamic-context-pruning` is tracked as a desired companion plugin, but remains disabled until its npm tarball checksum and offline plugin-cache strategy are verified. Real install or download runs refuse placeholder checksums; `-WhatIf` is the only mode that tolerates placeholders for planning.
 
 ## Desired End State
 
 After a successful run, the target PC should have:
 
 - `opencode` installed or staged in the configured install root.
-- Required companion tools installed or staged from the same manifest.
+- Required companion tools installed or staged from the same manifest, with desired plugins tracked even when they are not ready to enable.
 - Generated offline-safe environment defaults and a session activation script under `.opencodeplay/`.
 - A local record of what was installed under `.opencodeplay/state.json`.
 - Validation commands passing for every enabled manifest entry.
@@ -86,6 +86,8 @@ You are setting up this PC using the local opencodeplay repository. Read README.
 
 For `opencode`, prefer official GitHub Releases artifacts over source snapshots. Upstream source is a Bun workspace, so source-first offline setup requires bundling Bun and build dependencies too. For Windows, useful release channels include CLI archives such as `opencode-windows-x64.zip`, `opencode-windows-x64-baseline.zip`, and `opencode-windows-arm64.zip`; desktop installers use names such as `opencode-desktop-win-x64.exe` and are separate optional artifacts.
 
+Desired companion plugins currently include [opencode-dynamic-context-pruning](https://github.com/Opencode-DCP/opencode-dynamic-context-pruning). Its stable plugin package is `@tarquinen/opencode-dcp` version `3.1.11`, distributed as the npm tarball `https://registry.npmjs.org/@tarquinen/opencode-dcp/-/opencode-dcp-3.1.11.tgz`. Keep it disabled until the tarball SHA-256 is recorded and the bundle includes whatever opencode/Bun plugin cache is needed for offline installation.
+
 Every vendored or cached item should have:
 
 - Upstream URL.
@@ -108,7 +110,7 @@ Every vendored or cached item should have:
 
 - Upstream recommends WSL for the best Windows experience; native Windows artifacts are still useful for quick bootstrap.
 - Bootstrap generates `.opencodeplay\env.ps1` to disable dynamic network behavior with `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_MODELS_FETCH`, and `OPENCODE_DISABLE_LSP_DOWNLOAD`.
-- Prefer local plugins under `.opencode/plugins/` or the user config plugin directory. NPM plugins and provider packages may trigger Bun/package downloads unless their caches are also pre-staged.
+- Prefer local plugins under `.opencode/plugins/` or the user config plugin directory. NPM plugins such as `@tarquinen/opencode-dcp`, provider packages, and plugin dependencies may trigger Bun/package downloads unless their caches are also pre-staged.
 - Useful validation commands after a real install are `opencode --version`, `opencode debug config`, `opencode auth list`, `opencode models`, and `opencode mcp list`.
 - Use `opencode --pure` when diagnosing packaged plugin or configuration problems.
 

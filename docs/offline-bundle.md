@@ -32,6 +32,13 @@ For `opencode`, start with GitHub Release assets instead of source snapshots. So
 
 Record the release tag, target commit, source URL, SHA-256 digest, and license note for every included artifact. File size is useful external evidence when preparing a release bundle, but it is not currently a manifest field.
 
+## Desired Plugin Candidates
+
+- `opencode-dynamic-context-pruning` is tracked as a desired opencode companion plugin.
+- Stable package: `@tarquinen/opencode-dcp` version `3.1.11` from `https://registry.npmjs.org/@tarquinen/opencode-dcp/-/opencode-dcp-3.1.11.tgz`.
+- License: `AGPL-3.0-or-later`.
+- Keep it disabled until the tarball checksum is recorded and an offline-safe opencode/Bun plugin cache or local plugin install flow is documented and tested.
+
 ## Dry Run
 
 ```powershell
