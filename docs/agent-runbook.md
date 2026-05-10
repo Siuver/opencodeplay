@@ -20,15 +20,18 @@ This runbook is written for an LLM agent operating on a fresh PC. The goal is to
 4. If online access is available and an artifact is missing, let `scripts/bootstrap.ps1 -Mode Online` download only entries with concrete manifest URLs and SHA-256 checksums.
 5. Verify SHA-256 checksums for all artifacts that declare a checksum.
 6. Run `scripts/bootstrap.ps1 -Mode Auto`.
-7. Run `scripts/validate.ps1`.
-8. Report installed tools, skipped tools, failures, and the exact next action for any unresolved item.
+7. Dot-source `.opencodeplay\activate-opencodeplay.ps1` in the current PowerShell session when you need immediate `opencode` PATH access.
+8. Use `scripts/bootstrap.ps1 -Mode Auto -AddToUserPath` only when the user explicitly wants persistent user PATH wiring.
+9. Run `scripts/validate.ps1`.
+10. Report installed tools, skipped tools, generated activation files, failures, and the exact next action for any unresolved item.
 
 ## opencode-Specific Guidance
 
 - Preferred offline core: CLI release archive, starter config, local plugins, and optional local MCP server definitions.
 - Online fallback only: package-manager installs, NPM plugins, provider package downloads, remote MCP OAuth, and model refreshes.
 - Windows-first artifact candidates: `opencode-windows-x64.zip`, `opencode-windows-x64-baseline.zip`, `opencode-windows-arm64.zip`, and optional desktop installer.
-- Useful offline environment variables: `OPENCODE_DISABLE_AUTOUPDATE=1`, `OPENCODE_DISABLE_MODELS_FETCH=1`, and `OPENCODE_DISABLE_LSP_DOWNLOAD=1`.
+- Bootstrap-generated `.opencodeplay\env.ps1` sets `OPENCODE_DISABLE_AUTOUPDATE=1`, `OPENCODE_DISABLE_MODELS_FETCH=1`, and `OPENCODE_DISABLE_LSP_DOWNLOAD=1`.
+- Bootstrap-generated `.opencodeplay\activate-opencodeplay.ps1` dot-sources `env.ps1` and prepends the staged `opencode` directory to PATH for the current session.
 - Useful validation commands after a real install: `opencode --version`, `opencode debug config`, `opencode auth list`, `opencode models`, and `opencode mcp list`.
 
 ## Offline Rules
@@ -53,5 +56,7 @@ Validation succeeds only when every enabled tool either:
 
 - Runs its declared validation command successfully, or
 - Is explicitly marked as `stageOnly`, appears in `.opencodeplay/state.json`, and has an existing staged target path.
+
+After bootstrap has written `.opencodeplay/state.json`, validation also expects generated `.opencodeplay\env.ps1` and `.opencodeplay\activate-opencodeplay.ps1` to exist.
 
 Validation commands must stay structured in the manifest as `executable` plus `args`. Do not replace them with shell strings.

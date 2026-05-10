@@ -48,3 +48,5 @@ Use a real run with a disposable install root before publishing a bundle:
 ```
 
 If any enabled artifact still has a placeholder checksum, the real run must fail. This is intentional and protects offline installs from unverifiable files.
+
+Bootstrap-generated `.opencodeplay\env.ps1`, `.opencodeplay\activate-opencodeplay.ps1`, and `.opencodeplay\state.json` are local generated outputs. They should be verified during a test run, but they are not source bundle inputs and do not belong under `artifacts/`.

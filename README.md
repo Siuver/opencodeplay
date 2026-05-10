@@ -18,7 +18,7 @@ After a successful run, the target PC should have:
 
 - `opencode` installed or staged in the configured install root.
 - Required companion tools installed or staged from the same manifest.
-- Offline-safe environment guidance for disabling dynamic fetches when needed.
+- Generated offline-safe environment defaults and a session activation script under `.opencodeplay/`.
 - A local record of what was installed under `.opencodeplay/state.json`.
 - Validation commands passing for every enabled manifest entry.
 
@@ -56,7 +56,17 @@ Useful options:
 .\scripts\bootstrap.ps1 -Mode Offline
 .\scripts\bootstrap.ps1 -Mode Online
 .\scripts\bootstrap.ps1 -InstallRoot "$env:USERPROFILE\.opencodeplay\tools"
+.\scripts\bootstrap.ps1 -Mode Offline -AddToUserPath
 ```
+
+Bootstrap always writes `.opencodeplay\env.ps1` with offline defaults for `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_MODELS_FETCH`, and `OPENCODE_DISABLE_LSP_DOWNLOAD`. It also writes `.opencodeplay\activate-opencodeplay.ps1`; dot-source it to apply the offline defaults and prepend staged `opencode` to PATH for the current PowerShell session:
+
+```powershell
+. .\.opencodeplay\activate-opencodeplay.ps1
+opencode --version
+```
+
+Use `-AddToUserPath` only when you want bootstrap to persistently prepend the staged `opencode` directory to the Windows user PATH. Open a new terminal after using that option.
 
 ## Agent Prompt
 
@@ -97,7 +107,7 @@ Every vendored or cached item should have:
 ## Offline opencode Notes
 
 - Upstream recommends WSL for the best Windows experience; native Windows artifacts are still useful for quick bootstrap.
-- Disable dynamic network behavior in constrained environments with `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_MODELS_FETCH`, and `OPENCODE_DISABLE_LSP_DOWNLOAD` where appropriate.
+- Bootstrap generates `.opencodeplay\env.ps1` to disable dynamic network behavior with `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_MODELS_FETCH`, and `OPENCODE_DISABLE_LSP_DOWNLOAD`.
 - Prefer local plugins under `.opencode/plugins/` or the user config plugin directory. NPM plugins and provider packages may trigger Bun/package downloads unless their caches are also pre-staged.
 - Useful validation commands after a real install are `opencode --version`, `opencode debug config`, `opencode auth list`, `opencode models`, and `opencode mcp list`.
 - Use `opencode --pure` when diagnosing packaged plugin or configuration problems.
