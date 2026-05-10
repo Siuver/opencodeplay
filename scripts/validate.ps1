@@ -40,6 +40,16 @@ function Get-ValidationArguments {
     return @($Validation.args)
 }
 
+function Test-FileContainsLine {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$Pattern
+    )
+
+    $content = Get-Content -LiteralPath $Path -Raw
+    return $content -match $Pattern
+}
+
 $manifestFullPath = [System.IO.Path]::GetFullPath($ManifestPath)
 if (-not (Test-Path -LiteralPath $manifestFullPath)) {
     throw "Manifest not found: $manifestFullPath"
@@ -47,12 +57,47 @@ if (-not (Test-Path -LiteralPath $manifestFullPath)) {
 
 $manifest = Get-Content -LiteralPath $manifestFullPath -Raw | ConvertFrom-Json
 $stateFullPath = [System.IO.Path]::GetFullPath($StatePath)
+$generatedRoot = Split-Path -Parent $stateFullPath
+$envScriptPath = Join-Path $generatedRoot 'env.ps1'
+$activationScriptPath = Join-Path $generatedRoot 'activate-opencodeplay.ps1'
 $state = $null
 if (Test-Path -LiteralPath $stateFullPath) {
     $state = Get-Content -LiteralPath $stateFullPath -Raw | ConvertFrom-Json
 }
 
 $failures = @()
+
+if ($null -ne $state) {
+    if (-not (Test-Path -LiteralPath $envScriptPath)) {
+        $failures += "Generated offline environment script is missing: $envScriptPath"
+    }
+    else {
+        foreach ($expectedPattern in @(
+            '\$env:OPENCODE_DISABLE_AUTOUPDATE\s*=\s*''1''',
+            '\$env:OPENCODE_DISABLE_MODELS_FETCH\s*=\s*''1''',
+            '\$env:OPENCODE_DISABLE_LSP_DOWNLOAD\s*=\s*''1'''
+        )) {
+            if (-not (Test-FileContainsLine -Path $envScriptPath -Pattern $expectedPattern)) {
+                $failures += "Generated offline environment script is missing expected setting pattern: $expectedPattern"
+            }
+        }
+    }
+
+    if (-not (Test-Path -LiteralPath $activationScriptPath)) {
+        $failures += "Generated activation script is missing: $activationScriptPath"
+    }
+    else {
+        foreach ($expectedPattern in @(
+            'Join-Path\s+\$PSScriptRoot\s+''env\.ps1''',
+            '\.\s+\$envScript',
+            '\$env:Path\s*=\s*\$toolPath\s*\+\s*'';''\s*\+\s*\$env:Path'
+        )) {
+            if (-not (Test-FileContainsLine -Path $activationScriptPath -Pattern $expectedPattern)) {
+                $failures += "Generated activation script is missing expected behavior pattern: $expectedPattern"
+            }
+        }
+    }
+}
 
 foreach ($tool in $manifest.tools) {
     if (-not $tool.enabled) {
