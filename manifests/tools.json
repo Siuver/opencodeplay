@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "installRoot": ".opencodeplay/tools",
+  "tools": [
+    {
+      "name": "opencode",
+      "enabled": true,
+      "stageOnly": true,
+      "version": "v1.14.46",
+      "description": "Core opencode CLI from anomalyco/opencode. Prefer pinned GitHub Release archives over source snapshots for offline bootstrap.",
+      "license": "MIT",
+      "source": {
+        "type": "github-release-asset",
+        "url": "https://github.com/anomalyco/opencode/releases/download/v1.14.46/opencode-windows-x64.zip",
+        "releasePage": "https://github.com/anomalyco/opencode/releases/tag/v1.14.46",
+        "targetCommitish": "e1c1193f3e3e8efcde5de6f658cc5451aa0b47bb"
+      },
+      "artifact": {
+        "fileName": "opencode-windows-x64-v1.14.46.zip",
+        "sha256": "c33959a92fd3050bbc2ab1646888e3f692b01cb8be55c7ba8632fcfecd1c941a"
+      },
+      "install": {
+        "type": "archive",
+        "targetSubdir": "opencode"
+      },
+      "validate": {
+        "executable": "opencode",
+        "args": ["--version"],
+        "notes": "After a real install, also consider: opencode debug config, opencode auth list, opencode models, and opencode mcp list."
+      }
+    },
+    {
+      "name": "opencode-windows-x64-baseline",
+      "enabled": false,
+      "stageOnly": true,
+      "version": "v1.14.46",
+      "description": "Compatibility-first Windows x64 CLI artifact for machines that need the upstream baseline build.",
+      "license": "MIT",
+      "source": {
+        "type": "github-release-asset",
+        "url": "https://github.com/anomalyco/opencode/releases/download/v1.14.46/opencode-windows-x64-baseline.zip",
+        "releasePage": "https://github.com/anomalyco/opencode/releases/tag/v1.14.46",
+        "targetCommitish": "e1c1193f3e3e8efcde5de6f658cc5451aa0b47bb"
+      },
+      "artifact": {
+        "fileName": "opencode-windows-x64-baseline-v1.14.46.zip",
+        "sha256": "add32a1cd949928763fd1caef7de0f31e4e7830fdae21050d2f20332398525ff"
+      },
+      "install": {
+        "type": "archive",
+        "targetSubdir": "opencode-baseline"
+      },
+      "validate": {
+        "executable": "opencode",
+        "args": ["--version"],
+        "notes": "Enable only when the target PC needs the baseline Windows x64 build."
+      }
+    },
+    {
+      "name": "opencode-desktop-windows-x64",
+      "enabled": false,
+      "stageOnly": true,
+      "version": "v1.14.46",
+      "description": "Optional opencode desktop installer for Windows. Requires the Windows desktop runtime expectations documented upstream.",
+      "license": "MIT",
+      "source": {
+        "type": "github-release-asset",
+        "url": "https://github.com/anomalyco/opencode/releases/download/v1.14.46/opencode-desktop-win-x64.exe",
+        "releasePage": "https://github.com/anomalyco/opencode/releases/tag/v1.14.46",
+        "targetCommitish": "e1c1193f3e3e8efcde5de6f658cc5451aa0b47bb"
+      },
+      "artifact": {
+        "fileName": "opencode-desktop-win-x64-v1.14.46.exe",
+        "sha256": "1fbfe3d37efce6d95acf578dfea6dafdb8de5abd837d9d87d83d3287362ec2eb"
+      },
+      "install": {
+        "type": "copy",
+        "targetSubdir": "opencode-desktop"
+      },
+      "validate": {
+        "executable": "opencode",
+        "args": ["--version"],
+        "notes": "This entry stages the installer only; desktop validation should be performed manually or through a GUI automation step."
+      }
+    }
+  ]
+}
