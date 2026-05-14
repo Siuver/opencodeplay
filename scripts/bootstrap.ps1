@@ -3,7 +3,8 @@ param(
     [ValidateSet('Auto', 'Online', 'Offline')]
     [string]$Mode = 'Auto',
 
-    [string]$ManifestPath = '',
+    [Alias('ManifestPath')]
+    [string]$ArtifactCatalogPath = '',
 
     [string]$ArtifactsRoot = '',
 
@@ -16,8 +17,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
-if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
-    $ManifestPath = Join-Path $RepoRoot 'manifests\tools.json'
+if ([string]::IsNullOrWhiteSpace($ArtifactCatalogPath)) {
+    $ArtifactCatalogPath = Join-Path $RepoRoot 'manifests\pinned-artifacts.json'
 }
 
 if ([string]::IsNullOrWhiteSpace($ArtifactsRoot)) {
@@ -53,7 +54,7 @@ function Assert-Checksum {
             return
         }
 
-        throw "Refusing to use '$Path': manifest contains a placeholder SHA-256."
+        throw "Refusing to use '$Path': artifact catalog contains a placeholder SHA-256."
     }
 
     if ($ExpectedSha256 -notmatch '^[a-fA-F0-9]{64}$') {
@@ -309,17 +310,17 @@ function Add-UserPathEntry {
     }
 }
 
-$manifestFullPath = [System.IO.Path]::GetFullPath($ManifestPath)
+$artifactCatalogFullPath = [System.IO.Path]::GetFullPath($ArtifactCatalogPath)
 $artifactsFullPath = [System.IO.Path]::GetFullPath($ArtifactsRoot)
 
-if (-not (Test-Path -LiteralPath $manifestFullPath)) {
-    throw "Manifest not found: $manifestFullPath"
+if (-not (Test-Path -LiteralPath $artifactCatalogFullPath)) {
+    throw "Artifact catalog not found: $artifactCatalogFullPath"
 }
 
-$manifest = Get-Content -LiteralPath $manifestFullPath -Raw | ConvertFrom-Json
+$artifactCatalog = Get-Content -LiteralPath $artifactCatalogFullPath -Raw | ConvertFrom-Json
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
-    $InstallRoot = Resolve-RepoPath $manifest.installRoot
+    $InstallRoot = Resolve-RepoPath $artifactCatalog.installRoot
 }
 else {
     $InstallRoot = [System.IO.Path]::GetFullPath($InstallRoot)
@@ -329,7 +330,7 @@ $installedTools = @()
 $missingArtifacts = @()
 $opencodeToolPath = ''
 
-foreach ($tool in $manifest.tools) {
+foreach ($tool in $artifactCatalog.artifacts) {
     Assert-ManifestTool -Tool $tool
 
     if (-not $tool.enabled) {

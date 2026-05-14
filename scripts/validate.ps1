@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$ManifestPath = '',
+    [Alias('ManifestPath')]
+    [string]$ArtifactCatalogPath = '',
 
     [string]$StatePath = ''
 )
@@ -9,8 +10,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $RepoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 
-if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
-    $ManifestPath = Join-Path $RepoRoot 'manifests\tools.json'
+if ([string]::IsNullOrWhiteSpace($ArtifactCatalogPath)) {
+    $ArtifactCatalogPath = Join-Path $RepoRoot 'manifests\pinned-artifacts.json'
 }
 
 if ([string]::IsNullOrWhiteSpace($StatePath)) {
@@ -50,12 +51,12 @@ function Test-FileContainsLine {
     return $content -match $Pattern
 }
 
-$manifestFullPath = [System.IO.Path]::GetFullPath($ManifestPath)
-if (-not (Test-Path -LiteralPath $manifestFullPath)) {
-    throw "Manifest not found: $manifestFullPath"
+$artifactCatalogFullPath = [System.IO.Path]::GetFullPath($ArtifactCatalogPath)
+if (-not (Test-Path -LiteralPath $artifactCatalogFullPath)) {
+    throw "Artifact catalog not found: $artifactCatalogFullPath"
 }
 
-$manifest = Get-Content -LiteralPath $manifestFullPath -Raw | ConvertFrom-Json
+$artifactCatalog = Get-Content -LiteralPath $artifactCatalogFullPath -Raw | ConvertFrom-Json
 $stateFullPath = [System.IO.Path]::GetFullPath($StatePath)
 $generatedRoot = Split-Path -Parent $stateFullPath
 $envScriptPath = Join-Path $generatedRoot 'env.ps1'
@@ -99,7 +100,7 @@ if ($null -ne $state) {
     }
 }
 
-foreach ($tool in $manifest.tools) {
+foreach ($tool in $artifactCatalog.artifacts) {
     if (-not $tool.enabled) {
         continue
     }
