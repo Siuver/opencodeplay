@@ -1,12 +1,13 @@
 # Offline Bundle Guide
 
-Use this guide on an online machine before transferring `opencodeplay` to an offline PC.
+Use this optional guide when `opencodeplay` must be transferred to an offline PC or when reproducibility matters more than speed. This is not the default setup experience; it is the strict packaging workflow behind the Offline Core profile.
 
 ## Bundle Checklist
 
-- Pin every enabled tool in `manifests/tools.json`.
+- Choose the Offline Core or Full Workstation profile before collecting artifacts.
+- Pin every enabled artifact-backed tool in `manifests/pinned-artifacts.json`.
 - Download the exact artifact files into `artifacts/`.
-- Record SHA-256 checksums in the manifest.
+- Record SHA-256 checksums in the pinned-artifact catalog.
 - Include license notes for vendored source or redistributed binaries.
 - Run a dry run in offline mode.
 - Transfer the complete repository directory to the target PC.
@@ -28,9 +29,9 @@ For `opencode`, start with GitHub Release assets instead of source snapshots. So
 - `opencode-windows-x64.zip` for normal 64-bit Windows CLI installs.
 - `opencode-windows-x64-baseline.zip` for older CPUs or compatibility-first machines.
 - `opencode-windows-arm64.zip` for Windows on ARM.
-- `opencode-desktop-win-x64.exe` only if the desktop app is part of the bundle.
+- `opencode-desktop-win-x64.exe` only if the desktop app is part of the selected profile.
 
-Record the release tag, target commit, source URL, SHA-256 digest, and license note for every included artifact. File size is useful external evidence when preparing a release bundle, but it is not currently a manifest field.
+Record the release tag, target commit, source URL, SHA-256 digest, and license note for every included artifact. File size is useful external evidence when preparing a release bundle, but it is not currently a pinned-artifact field.
 
 ## Desired Plugin Candidates
 
