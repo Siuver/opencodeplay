@@ -1,31 +1,35 @@
 # AGENTS.md
 
-This repository is intended for long-term maintenance as an agent-operable bootstrap kit for quickly setting up a new PC, including offline environments. Treat these instructions as the durable project contract for any LLM agent or human maintainer working in this repo.
+This repository is intended for long-term maintenance as an agent-operated guide for setting up an `opencode`-centered workstation, including offline and reproducible environments. Treat these instructions as the durable project contract for any LLM agent or human maintainer working in this repo.
 
 ## Project Mission
 
-`opencodeplay` prepares a new machine for an `opencode`-centered workflow. It should support:
+`opencodeplay` helps a user and agent choose, execute, and verify a complete `opencode` environment. It should support:
 
-- Offline-first setup for the core toolchain using pre-seeded artifacts.
+- Interactive setup conversations that collect only the decisions that affect the outcome.
+- Profiles and recipes for core CLI, offline core, full workstation, compatibility builds, plugins, MCP, and activation.
+- Offline-first execution paths for the core toolchain using pre-seeded artifacts when the user chooses that path.
 - Online fallback only when versions, URLs, and checksums are pinned.
-- Clear enough documentation that a user can delegate setup to an LLM agent and wait for a precise result.
-- Long-term maintainability through manifests, reproducible artifacts, and validation scripts.
+- Long-term maintainability through guidance docs, pinned-artifact metadata, reproducible artifacts, and validation helpers.
 
 ## Source of Truth
 
-- `manifests/tools.json` is the source of truth for tool names, versions, source URLs, artifact names, checksums, install behavior, and validation behavior.
-- `artifacts/` is the offline cache. File names must match the manifest exactly.
-- `scripts/bootstrap.ps1` is the setup entrypoint.
-- `scripts/validate.ps1` is the validation entrypoint.
-- `README.md` is the human entrypoint.
-- `docs/agent-runbook.md` is the delegated-agent runbook.
+- User answers and the selected setup profile are the source of truth for setup intent.
+- `docs/setup-conversation.md` defines the interactive question flow.
+- `docs/agent-runbook.md` defines the delegated-agent workflow.
+- `manifests/pinned-artifacts.json` is the optional execution backend for pinned artifact metadata: tool names, versions, source URLs, artifact names, checksums, install behavior, and validation behavior for automatable components.
+- `artifacts/` is the offline cache. File names must match the pinned-artifact catalog exactly when that backend is used.
+- `scripts/bootstrap.ps1` is an optional artifact fetch/stage helper.
+- `scripts/validate.ps1` is an optional strict verifier for pinned-artifact staging.
+- `README.md` and `docs/start-here.md` are the human and agent entrypoints.
 - `docs/offline-bundle.md` explains how to prepare a transferable offline bundle.
 
 If these files disagree, fix the disagreement instead of choosing whichever behavior is convenient.
 
 ## Maintenance Rules
 
-- Keep setup manifest-driven. Do not hide install logic only in prose.
+- Keep the repo guidance-first: docs decide intent, pinned-artifact metadata decides reproducible execution inputs, scripts execute helper actions.
+- Keep automated install/staging paths metadata-driven when they are used.
 - Keep scripts idempotent. Running bootstrap or validation more than once must be safe.
 - Prefer pinned release artifacts over vendored source trees.
 - Vendor source only when offline rebuilds are explicitly required and documented.
@@ -39,7 +43,7 @@ If these files disagree, fix the disagreement instead of choosing whichever beha
 
 - Every enabled real install must have a concrete SHA-256 checksum.
 - Placeholder checksums are allowed only for planning with `-WhatIf`; real install/download paths must refuse them.
-- Online downloads must use manifest-pinned URLs and must verify SHA-256 before install.
+- Online downloads must use pinned-artifact metadata URLs and must verify SHA-256 before install.
 - Validation entries must stay structured as `executable` plus `args`; do not use shell command strings.
 - Install target paths must remain inside the configured install root.
 - Archive extraction must reject unsafe entry paths such as rooted paths or `..` traversal.
@@ -55,9 +59,9 @@ If these files disagree, fix the disagreement instead of choosing whichever beha
 ## Documentation Rules
 
 - Keep README instructions honest about what is implemented now versus what still requires pinned metadata or artifacts.
-- Keep the agent prompt and runbook actionable: exact files to read, exact commands to run, exact failure reporting expectations.
-- When adding a tool, update both `manifests/tools.json` and the docs that explain how to prepare and validate it.
-- Include enough context for a future agent to continue without asking routine questions.
+- Keep the setup conversation and runbook actionable: exact questions, decision points, files to read, commands to run, failure reporting expectations.
+- When adding an artifact-backed or automated installable tool, update both `manifests/pinned-artifacts.json` and the docs that explain when to offer, prepare, and validate it. For guidance-only capabilities, update the relevant docs or recipes without forcing them into the catalog.
+- Include enough context for a future agent to continue while still asking high-value setup questions when choices affect the outcome.
 - Favor concise, operational documentation over broad essays.
 
 ## Verification Rules
@@ -65,7 +69,7 @@ If these files disagree, fix the disagreement instead of choosing whichever beha
 Before finishing any change that affects setup, manifests, artifacts, or docs, run the most relevant checks available:
 
 ```powershell
-powershell.exe -NoProfile -Command "Get-Content -LiteralPath '.\manifests\tools.json' -Raw | ConvertFrom-Json | Out-Null"
+powershell.exe -NoProfile -Command "Get-Content -LiteralPath '.\manifests\pinned-artifacts.json' -Raw | ConvertFrom-Json | Out-Null"
 .\scripts\bootstrap.ps1 -Mode Offline -WhatIf
 .\scripts\validate.ps1
 ```
@@ -75,7 +79,7 @@ For script changes, also test the safety behavior with temporary artifacts when 
 - Missing artifact fails clearly in offline mode.
 - Placeholder checksum is tolerated only under `-WhatIf`.
 - Real install fails with placeholder checksum.
-- Real install succeeds with a temporary artifact and matching SHA-256 in a temporary manifest.
+- Real install succeeds with a temporary artifact and matching SHA-256 in a temporary pinned-artifacts file.
 - Validation checks state/path for `stageOnly` tools.
 - Temporary artifacts and `.opencodeplay/` state are cleaned up after tests.
 
