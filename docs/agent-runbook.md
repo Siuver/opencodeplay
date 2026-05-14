@@ -1,64 +1,88 @@
 # Agent Runbook
 
-This runbook is written for an LLM agent operating on a fresh PC. The goal is to complete environment setup without asking the user for routine decisions.
+This runbook is for an LLM agent helping a user set up an `opencode`-centered workstation. The goal is to guide the setup through a short conversation, choose the right profile, execute the relevant helper steps, and report the result clearly.
 
 ## Operating Contract
 
-- Read `README.md`, this file, `manifests/tools.json`, and the scripts before acting.
-- Treat `manifests/tools.json` as the source of truth.
-- Prefer offline artifacts from `artifacts/`.
-- Use online downloads only when the manifest provides a pinned URL and checksum.
-- Never invent versions, URLs, checksums, or install commands.
-- For `opencode`, prefer pinned release archives over vendored source unless source builds are explicitly required.
-- Track desired companion plugins in the manifest even when disabled, but do not enable them until their artifacts, checksums, and offline cache requirements are concrete.
-- Stop only when a required offline artifact is missing and network access is unavailable.
+- Read `README.md`, `docs/start-here.md`, `docs/setup-conversation.md`, and this file before changing setup behavior. Read `manifests/pinned-artifacts.json` only when the selected path needs reproducible artifact staging.
+- Treat the user's answers as the source of setup intent.
+- Treat `manifests/pinned-artifacts.json` as the optional backend catalog for pinned artifact metadata.
+- Use `scripts/bootstrap.ps1` and `scripts/validate.ps1` as helper executors when the selected plan needs pinned-artifact staging.
+- Prefer offline artifacts from `artifacts/` when the user chooses offline or reproducible setup.
+- Use online downloads only when the pinned-artifact backend provides a pinned URL and concrete SHA-256 checksum.
+- Never invent versions, URLs, checksums, licenses, install commands, validation commands, secrets, or credentials.
 
-## Setup Flow
+## Flow
 
-1. Check the OS and PowerShell version.
-2. Inspect `manifests/tools.json` for enabled tools.
-3. For each enabled tool, verify whether the declared offline artifact exists.
-4. If online access is available and an artifact is missing, let `scripts/bootstrap.ps1 -Mode Online` download only entries with concrete manifest URLs and SHA-256 checksums.
-5. Verify SHA-256 checksums for all artifacts that declare a checksum.
-6. Run `scripts/bootstrap.ps1 -Mode Auto`.
-7. Dot-source `.opencodeplay\activate-opencodeplay.ps1` in the current PowerShell session when you need immediate `opencode` PATH access.
-8. Use `scripts/bootstrap.ps1 -Mode Auto -AddToUserPath` only when the user explicitly wants persistent user PATH wiring.
-9. Run `scripts/validate.ps1`.
-10. Report installed tools, skipped tools, generated activation files, failures, and the exact next action for any unresolved item.
+1. Read the entry docs and inspect the target machine constraints.
+2. Ask the fast question set from `docs/setup-conversation.md` unless the answers are already known.
+3. Select a profile: Core CLI, Offline Core, Full Workstation, or Compatibility Baseline.
+4. Reflect the plan back to the user in plain English before persistent changes.
+5. Execute only the setup steps that match the selected profile.
+6. Use scripts only for pinned artifacts and reproducible staging when the chosen profile calls for them.
+7. Validate the selected capabilities.
+8. Report what is ready, what was skipped, and what still needs user action.
 
-## opencode-Specific Guidance
+## When to Ask
 
-- Preferred offline core: CLI release archive, starter config, local plugins, and optional local MCP server definitions.
-- Online fallback only: package-manager installs, NPM plugins, provider package downloads, remote MCP OAuth, and model refreshes.
-- Desired DCP companion: `opencode-dynamic-context-pruning` from `https://github.com/Opencode-DCP/opencode-dynamic-context-pruning`, npm package `@tarquinen/opencode-dcp` version `3.1.11`. Keep disabled until `opencode-dcp-3.1.11.tgz` has a real SHA-256 and the offline plugin-cache/install path is tested.
-- Windows-first artifact candidates: `opencode-windows-x64.zip`, `opencode-windows-x64-baseline.zip`, `opencode-windows-arm64.zip`, and optional desktop installer.
-- Bootstrap-generated `.opencodeplay\env.ps1` sets `OPENCODE_DISABLE_AUTOUPDATE=1`, `OPENCODE_DISABLE_MODELS_FETCH=1`, and `OPENCODE_DISABLE_LSP_DOWNLOAD=1`.
-- Bootstrap-generated `.opencodeplay\activate-opencodeplay.ps1` dot-sources `env.ps1` and prepends the staged `opencode` directory to PATH for the current session.
-- Useful validation commands after a real install: `opencode --version`, `opencode debug config`, `opencode auth list`, `opencode models`, and `opencode mcp list`.
+Ask concise questions when an answer changes the setup:
+
+- Native Windows, WSL, or both.
+- Online, offline, or pre-seeded bundle.
+- CLI only, desktop, plugins, MCP, or full workstation.
+- Fastest-working setup or reproducible setup.
+- Session-only activation or persistent PATH update.
+- Whether auth, OAuth, model refresh, or package-manager downloads are allowed.
+
+Do not ask about safe reads, dry runs, checksum verification, or non-persistent inspection.
+
+## Script-Assisted Path
+
+Use this path when the chosen profile maps to enabled pinned artifacts.
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\bootstrap.ps1 -Mode Auto
+.\scripts\validate.ps1
+```
+
+Use `-Mode Offline` when the user selected an offline bundle. Use `-WhatIf` to inspect readiness without writing install state. Use `-AddToUserPath` only when the user explicitly allows persistent PATH changes.
+
+After bootstrap, dot-source the activation helper only when immediate session access is useful:
+
+```powershell
+. .\.opencodeplay\activate-opencodeplay.ps1
+opencode --version
+```
+
+## opencode Guidance
+
+- Preferred native Windows core: pinned CLI release archive from the artifact catalog.
+- Compatibility build: use the baseline artifact only when the target PC needs it.
+- Desktop app: optional and separate from CLI readiness.
+- Offline-safe extras: local plugins and local MCP definitions.
+- Online-dependent extras: NPM plugins, provider package downloads, remote MCP OAuth, and model refreshes unless their caches are bundled.
+- Desired DCP companion: `@tarquinen/opencode-dcp` version `3.1.11`; keep disabled until its checksum and offline plugin-cache/install path are tested.
 
 ## Offline Rules
 
-In offline mode, do not try package managers, curl, winget, npm, bun, git clone, or browser downloads. Only use files already present in this repository.
+In offline mode, do not try package managers, curl, winget, npm, bun, git clone, browser downloads, remote provider auth, or remote MCP OAuth. Only use files already present in this repository.
 
-If setup cannot continue, report a table with:
+If setup cannot continue, report:
 
-- Tool name.
+- Capability or tool name.
 - Expected artifact file.
 - Expected version.
 - Where the artifact should be placed.
-- Manifest field that needs to be updated.
-
-## Online Rules
-
-In online mode, downloads must be pinned and verifiable. If a manifest entry lacks a concrete `source.url` or `artifact.sha256`, treat that entry as not ready for unattended setup. Do not bypass checksum failures.
+- Pinned-artifact field or doc recipe that needs to be updated.
 
 ## Validation Rules
 
-Validation succeeds only when every enabled tool either:
+Validation should match the selected profile:
 
-- Runs its declared validation command successfully, or
-- Is explicitly marked as `stageOnly`, appears in `.opencodeplay/state.json`, and has an existing staged target path.
+- For pinned-artifact staging, run `scripts/validate.ps1` and report failures exactly.
+- For session activation, run `opencode --version` after dot-sourcing the activation script.
+- For desktop setup, report whether the installer was staged and what manual GUI validation remains.
+- For plugins/MCP/auth, validate only what was configured and list what requires later user action.
 
-After bootstrap has written `.opencodeplay/state.json`, validation also expects generated `.opencodeplay\env.ps1` and `.opencodeplay\activate-opencodeplay.ps1` to exist.
-
-Validation commands must stay structured in the manifest as `executable` plus `args`. Do not replace them with shell strings.
+Strict pinned-artifact validation succeeds only when every enabled catalog entry either runs its declared validation command successfully, or is marked `stageOnly`, appears in `.opencodeplay/state.json`, and has an existing staged target path.
