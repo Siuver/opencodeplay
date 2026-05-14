@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "installRoot": ".opencodeplay/tools",
-  "tools": [
+  "artifacts": [
     {
       "name": "opencode",
       "enabled": true,
