@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/opencode-bootstrap/opencode.schema.json",
+  "title": "OpenCode Desired State",
+  "type": "object",
+  "required": ["schema_version", "config", "assets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "config": {
+      "type": "object",
+      "required": ["target", "automation"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "target": { "const": "global" } },
+            "required": ["target"]
+          },
+          "then": {
+            "properties": {
+              "automation": { "enum": ["auto-with-approval", "manual-required", "unsupported"] }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "enum": ["project", "global", "custom"]
+        },
+        "path": {
+          "type": "string"
+        },
+        "automation": { "$ref": "#/$defs/automation" },
+        "template": {
+          "type": "string"
+        },
+        "merge_strategy": {
+          "type": "string",
+          "enum": ["copy-if-missing", "merge-safe", "replace-with-approval"]
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "auth": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/manual_check" }
+    },
+    "mcp": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asset" }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "automation": {
+      "type": "string",
+      "enum": ["auto-safe", "auto-with-approval", "manual-required", "unsupported"]
+    },
+    "asset_type": {
+      "type": "string",
+      "enum": ["agent", "skill", "plugin", "command", "tool", "theme", "config", "mcp"]
+    },
+    "asset": {
+      "type": "object",
+      "required": ["id", "type", "source", "target", "automation", "verify"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "requires_network": { "const": true } },
+            "required": ["requires_network"]
+          },
+          "then": {
+            "properties": {
+              "automation": { "enum": ["auto-with-approval", "manual-required", "unsupported"] }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "enum": ["plugin", "mcp"] } },
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "automation": { "enum": ["auto-with-approval", "manual-required", "unsupported"] }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "type": { "$ref": "#/$defs/asset_type" },
+        "enabled": { "type": "boolean", "default": true },
+        "source": { "type": "string" },
+        "target": { "type": "string" },
+        "automation": { "$ref": "#/$defs/automation" },
+        "merge_strategy": {
+          "type": "string",
+          "enum": ["copy-if-missing", "sync-owned", "replace-with-approval"]
+        },
+        "requires_network": { "type": "boolean", "default": false },
+        "verify": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/verify_step" },
+          "minItems": 1
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "verify_step": {
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "oneOf": [
+        { "required": ["value"] },
+        { "required": ["argv"] }
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["file-exists", "directory-exists", "command", "manual"]
+        },
+        "value": { "type": "string" },
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "success_regex": { "type": "string" }
+      }
+    },
+    "manual_check": {
+      "type": "object",
+      "required": ["id", "automation", "instructions", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "automation": { "const": "manual-required" },
+        "instructions": { "type": "string" },
+        "verify": { "$ref": "#/$defs/verify_step" }
+      }
+    }
+  }
+}

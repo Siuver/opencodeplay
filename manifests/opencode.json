@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0",
+  "config": {
+    "target": "project",
+    "automation": "auto-safe",
+    "template": "templates/opencode/opencode.json",
+    "merge_strategy": "copy-if-missing"
+  },
+  "assets": [
+    {
+      "id": "core-agents",
+      "type": "agent",
+      "enabled": true,
+      "source": "templates/opencode/agents/",
+      "target": ".opencode/agents/",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/agents"
+        }
+      ],
+      "notes": "Use sync-owned only after an ownership marker exists."
+    },
+    {
+      "id": "core-skills",
+      "type": "skill",
+      "enabled": true,
+      "source": "templates/opencode/skills/",
+      "target": ".opencode/skills/",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/skills"
+        }
+      ],
+      "notes": "Each skill directory should contain a SKILL.md file with matching name metadata."
+    },
+    {
+      "id": "core-commands",
+      "type": "command",
+      "enabled": true,
+      "source": "templates/opencode/commands/",
+      "target": ".opencode/commands/",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/commands"
+        }
+      ],
+      "notes": "Command templates provide repeatable agent prompts without requiring network or secrets."
+    },
+    {
+      "id": "core-tools",
+      "type": "tool",
+      "enabled": true,
+      "source": "templates/opencode/tools/",
+      "target": ".opencode/tools/",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/tools"
+        }
+      ],
+      "notes": "Tool templates should stay declarative and must not contain credentials."
+    },
+    {
+      "id": "core-themes",
+      "type": "theme",
+      "enabled": true,
+      "source": "templates/opencode/themes/",
+      "target": ".opencode/themes/",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/themes"
+        }
+      ],
+      "notes": "Theme templates are optional local assets and should be copied only when missing."
+    },
+    {
+      "id": "local-plugins",
+      "type": "plugin",
+      "enabled": false,
+      "source": "templates/opencode/plugins/",
+      "target": ".opencode/plugins/",
+      "automation": "auto-with-approval",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": true,
+      "verify": [
+        {
+          "kind": "directory-exists",
+          "value": ".opencode/plugins"
+        }
+      ],
+      "notes": "Plugins may trigger dependency installation through Bun, so they are approval-gated."
+    }
+  ],
+  "auth": [
+    {
+      "id": "provider-login",
+      "automation": "manual-required",
+      "instructions": "Run opencode auth login and complete the provider flow interactively. Do not store credentials in this repo.",
+      "verify": {
+        "kind": "command",
+        "argv": ["opencode", "auth", "list"],
+        "success_regex": "(?i)(anthropic|openai|github|google|azure|glm|credential|configured)"
+      }
+    }
+  ],
+  "mcp": [],
+  "notes": "This manifest declares OpenCode assets separately from tool installation so config sync and CLI management can evolve independently."
+}
