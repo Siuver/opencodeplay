@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "id": "default",
+  "description": "Install or update OpenCode when approved, sync repo-local OpenCode assets safely, and report provider auth as manual-required when pending.",
+  "platforms": ["windows", "linux", "macos"],
+  "network": "optional",
+  "tools": ["opencode", "provider-auth"],
+  "capabilities": ["opencode-local-assets", "provider-auth"],
+  "manifest_refs": [
+    "manifests/tools.json",
+    "manifests/capabilities.json",
+    "manifests/opencode.json"
+  ],
+  "manual_steps": [
+    "Provider authentication, if desired, must be completed by the user with opencode auth login."
+  ],
+  "approval_required": [
+    "Network installs and upgrades",
+    "Global package manager installation",
+    "Persistent PATH changes",
+    "Shell profile changes",
+    "Global OpenCode config changes",
+    "Plugin dependency installation",
+    "MCP server changes"
+  ],
+  "success_criteria": [
+    "opencode --version exits successfully or is reported as blocked by approval/platform/network",
+    "Repo-local OpenCode assets are copied only when missing or when ownership is proven",
+    "Provider auth is reported as configured, pending/manual-required, or failed",
+    "scripts/doctor reports no failed auto-safe items"
+  ]
+}

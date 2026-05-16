@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "capabilities": [
+    {
+      "id": "opencode-local-assets",
+      "description": "Sync project-local OpenCode agents, skills, commands, tools, and config templates.",
+      "enabled": true,
+      "automation": "auto-safe",
+      "manifests": ["manifests/opencode.json"],
+      "requires": ["opencode"],
+      "manual_steps": []
+    },
+    {
+      "id": "provider-auth",
+      "description": "Detect and report OpenCode provider authentication status without storing secrets.",
+      "enabled": true,
+      "automation": "manual-required",
+      "manifests": ["manifests/opencode.json"],
+      "requires": ["opencode"],
+      "manual_steps": ["Run opencode auth login interactively if provider auth is needed."]
+    }
+  ]
+}
