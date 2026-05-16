@@ -1,138 +1,102 @@
-# opencodeplay
+# OpenCode Environment Bootstrap Blueprint
 
-`opencodeplay` is a guidance-first workspace setup kit for building an `opencode`-centered environment with an agent. The main product is the conversation, plan, and runbook that help the user decide what kind of workstation they want; scripts and pinned-artifact metadata are optional execution helpers for paths that need reproducible staging.
+This repo defines an agent-led OpenCode environment setup. The intended interaction is:
 
-The repo supports four setup styles:
+1. Clone the repo.
+2. Tell an agent to follow the repo instructions.
+3. Let the agent detect the machine state, converge it toward the declared desired state, verify the result, and report anything that still needs human action.
 
-- **Guided setup:** an agent asks focused questions, chooses a profile, and applies only the relevant recipes.
-- **Delegated setup:** the user hands the repo to an agent and expects an interactive but efficient setup session.
-- **Offline/reproducible setup:** artifacts are pre-seeded, checksums are verified, and scripts provide deterministic staging.
-- **Pinned-artifact execution:** maintainers can still run the existing bootstrap and validation helpers when the chosen plan needs reproducible artifact staging.
+The repo should behave like a control plane, not like a long checklist. Prose explains intent; manifests declare desired state; scripts perform idempotent changes; `doctor` verifies the result.
 
-## Current Status
+## Agent Quickstart
 
-The core Windows x64 `opencode` CLI is pinned in `manifests/pinned-artifacts.json` and can be cached under `artifacts/` for offline installs. Optional baseline and desktop entries are pinned but disabled by default. `opencode-dynamic-context-pruning` is tracked as a desired companion plugin, but remains disabled until its npm tarball checksum and offline plugin-cache strategy are verified.
+When an agent starts from this repo, it should follow this sequence:
 
-Real install or download runs still refuse placeholder checksums. `-WhatIf` is the only mode that tolerates placeholders for planning.
+1. Read `AGENTS.md` for execution rules and safety boundaries.
+2. Read `manifests/profiles/default.json` or the profile named by the user.
+3. Read every path in the profile's `manifest_refs` list.
+4. Resolve capability IDs through `manifests/capabilities.json`; do not infer manifest names from capability names.
+5. Detect the local machine facts: OS, shell, package managers, network access, admin rights, WSL/native preference, and existing OpenCode installation.
+6. Produce a short plan that separates actions into `auto-safe`, `auto-with-approval`, `manual-required`, and `unsupported`.
+7. Run `scripts/bootstrap` only for allowed automatic actions.
+8. Run `scripts/doctor` after every setup or update attempt.
+9. Report changed items, skipped items, verification results, and manual follow-ups.
 
-## Start Here
+## Primary Commands
 
-If a human or agent is setting up a machine, start with these docs in order:
-
-1. `docs/start-here.md` - choose the setup path and profile.
-2. `docs/setup-conversation.md` - ask the user the questions that shape the plan.
-3. `docs/agent-runbook.md` - execute the chosen plan safely.
-4. `docs/offline-bundle.md` - use only when preparing or consuming an offline bundle.
-
-The short agent handoff prompt is:
-
-```text
-You are setting up an opencode-centered workstation using this local opencodeplay repo. Start with README.md, docs/start-here.md, docs/setup-conversation.md, and docs/agent-runbook.md. Ask concise setup questions before executing. Use manifests/pinned-artifacts.json only as the optional execution backend for pinned artifact metadata. Use scripts/bootstrap.ps1 and scripts/validate.ps1 as helper executors when the selected profile calls for reproducible artifact staging. Do not invent versions, URLs, checksums, install commands, secrets, or credentials.
-```
-
-## Desired End State
-
-After a successful guided setup, the target PC should have the capabilities the user actually chose, such as:
-
-- `opencode` CLI installed or staged and available for the selected shell/session.
-- Offline-safe environment defaults when the user chooses local/reproducible behavior.
-- Optional desktop, baseline, plugin, MCP, or local configuration guidance when selected.
-- A clear report of what was configured, what still needs user action, and how to validate it.
-- Reproducible artifact records when the setup path requires offline transfer or strict provenance.
-
-Success is not always “every pinned artifact validates.” Success means the selected profile validates and unresolved choices are explicitly reported.
-
-## Repository Layout
-
-```text
-opencodeplay/
-  README.md                    # Human and agent entrypoint
-  artifacts/                   # Offline cache; place pinned archives/binaries here
-  docs/
-    start-here.md              # Guide-first orientation and path selection
-    setup-conversation.md      # Interactive Q&A for choosing a setup profile
-    agent-runbook.md           # Agent workflow for planning, execution, validation
-    migration-plan.md          # Current refactor direction and keep/change assessment
-    offline-bundle.md          # Optional reproducible/offline packaging guide
-    profiles/                  # Outcome profiles chosen from the setup conversation
-    recipes/                   # Capability recipes composed by profiles
-  manifests/
-    pinned-artifacts.json      # Optional backend catalog for pinned artifacts
-  scripts/
-    bootstrap.ps1              # Optional artifact fetch/stage helper
-    validate.ps1               # Optional strict verifier for pinned-artifact staging
-```
-
-## Setup Paths
-
-### Guided setup
-
-Use this when the user wants the agent to make the setup feel personal and useful instead of blindly running scripts.
-
-1. Read `docs/start-here.md`.
-2. Ask the questions in `docs/setup-conversation.md`.
-3. Select a profile and explain the plan in plain English.
-4. Execute only the relevant recipes and helper commands.
-5. Validate the selected capabilities.
-
-### Delegated agent setup
-
-Use this when the user says “set this machine up for me.” The agent should still ask high-value questions about connectivity, native Windows vs WSL, CLI vs desktop, plugins/MCP, PATH persistence, and auth/config boundaries before taking action.
-
-See `docs/agent-runbook.md`.
-
-### Offline/reproducible setup
-
-Use this when the target machine is offline, the setup must be transferable, or provenance matters more than speed.
-
-See `docs/offline-bundle.md`.
-
-### Pinned-artifact execution
-
-Use this only after the selected plan calls for reproducible pinned-artifact staging.
+The currently implemented verification entrypoint is:
 
 ```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\scripts\bootstrap.ps1 -Mode Auto
-.\scripts\validate.ps1
+.\scripts\doctor.ps1 -Profile default
 ```
 
-Useful helper options:
+The planned convergence entrypoints are `scripts/bootstrap.ps1` for setup and `scripts/upgrade.ps1` for managed updates. Until those exist, agents must not infer setup actions from prose alone; they should use `scripts/doctor.ps1` to validate manifests and report blocked/manual work.
 
-```powershell
-.\scripts\bootstrap.ps1 -Mode Offline
-.\scripts\bootstrap.ps1 -Mode Online
-.\scripts\bootstrap.ps1 -Mode Offline -WhatIf
-.\scripts\bootstrap.ps1 -InstallRoot "$env:USERPROFILE\.opencodeplay\tools"
-.\scripts\bootstrap.ps1 -Mode Offline -AddToUserPath
+Equivalent shell scripts may be added later for WSL/Linux/macOS:
+
+```sh
+./scripts/bootstrap.sh --profile default
+./scripts/doctor.sh --profile default
+./scripts/upgrade.sh --profile default
 ```
 
-Bootstrap writes `.opencodeplay\env.ps1` with offline defaults for `OPENCODE_DISABLE_AUTOUPDATE`, `OPENCODE_DISABLE_MODELS_FETCH`, and `OPENCODE_DISABLE_LSP_DOWNLOAD`. It also writes `.opencodeplay\activate-opencodeplay.ps1`; dot-source it to apply the defaults and prepend staged `opencode` to PATH for the current PowerShell session:
+Avoid making agents infer setup from scattered docs. If a setup path matters, make it reachable through one of these commands and represent the desired state in manifests.
 
-```powershell
-. .\.opencodeplay\activate-opencodeplay.ps1
-opencode --version
-```
+## Desired-State Rule
 
-Use `-AddToUserPath` only when the user explicitly wants persistent user PATH wiring. Open a new terminal after using that option.
+For every declared tool or capability, the agent applies this convergence rule:
 
-## Capability Strategy
+- Missing and enabled: install.
+- Present but below policy: update.
+- Present and acceptable: skip.
+- Present but misconfigured: repair if safe.
+- Sensitive or persistent global change: ask unless pre-approved.
+- Unsupported on this machine/profile: skip with reason.
 
-Prefer capabilities and recipes over a single flat tool list:
+## Automation Classes
 
-- **Core CLI:** official `opencode` release artifact, staged or installed for the selected shell.
-- **Compatibility CLI:** baseline artifact only when the target PC needs it.
-- **Desktop app:** optional Windows desktop installer, staged separately from CLI validation.
-- **Plugins and MCP:** prefer local plugins and local MCP definitions for offline-safe setups.
-- **DCP plugin:** desired, pinned as a disabled candidate until checksum and offline cache behavior are proven.
+Every item in a manifest must declare one automation class:
 
-`manifests/pinned-artifacts.json` is the optional backend catalog for pinned artifact metadata. It is not the setup model; user answers, profiles, and recipes decide what should happen.
+- `auto-safe`: safe to run without asking, such as local verification, repo-local config sync, or installing into repo-owned/cache-owned paths.
+- `auto-with-approval`: requires explicit approval, such as editing PATH, writing shell profiles, installing global packages, or changing system config.
+- `manual-required`: cannot be automated safely, such as provider login, API key entry, or GUI confirmation.
+- `unsupported`: intentionally declared but not currently implemented for this platform/profile.
 
-## Maintainer Rules
+This classification is what prevents agents from confusing "can be done" with "should be done automatically".
 
-- Keep the repo guidance-first: docs define intent, pinned-artifact metadata defines reproducible execution inputs, scripts execute helper actions.
-- Keep automated install paths metadata-driven when they are used.
-- Do not add unpinned online install commands.
-- Do not invent versions, URLs, checksums, licenses, install commands, or validation commands.
-- Do not commit secrets, tokens, private SSH keys, or machine-local config.
-- Preserve offline/checksum safety even when the default user experience is interactive.
+## Source Of Truth
+
+- `AGENTS.md`: how agents must behave.
+- `manifests/profiles/*.json`: which capabilities are in scope.
+- `manifests/capabilities.json`: mapping from capability ids to concrete manifest files.
+- `manifests/tools.json`: tool installation/update/verification policy.
+- `manifests/opencode.json`: OpenCode-specific config, skills, agents, commands, plugins, and MCP policy.
+- `scripts/bootstrap.*`: converge desired state.
+- `scripts/doctor.*`: verify desired state.
+- `scripts/upgrade.*`: update existing managed state.
+- `docs/manual-steps.md`: auth and other human-only steps.
+
+## OpenCode-Specific Guidance
+
+OpenCode should be treated as both a managed tool and the agent runtime being customized.
+
+The repo should declare:
+
+- how to detect OpenCode, usually `opencode --version`;
+- how to install it when missing, using official install paths for the target OS;
+- how to update it when present, preferably `opencode upgrade` or the original package manager;
+- where repo-local OpenCode assets live, such as `.opencode/agents`, `.opencode/skills`, `.opencode/plugins`, `.opencode/commands`, and `.opencode/tools`;
+- which auth steps are manual-only;
+- which plugin/MCP steps require network, Bun, or user approval.
+
+Do not store provider credentials or API keys in this repo. Authentication steps belong in `docs/manual-steps.md` and verification should report whether auth is pending.
+
+## Done Definition
+
+A setup run is complete only when:
+
+1. `scripts/doctor` passes for all `auto-safe` and approved `auto-with-approval` items.
+2. The final report lists all installed, updated, skipped, repaired, failed, and manual-required items.
+3. No secrets were written to git-tracked files.
+4. Any persistent user or system change is explicitly reported.
+5. The agent can explain how to rerun `bootstrap`, `doctor`, and `upgrade` safely.

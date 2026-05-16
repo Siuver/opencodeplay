@@ -29,7 +29,7 @@ Allowed without asking:
 - run detection commands;
 - run verification commands;
 - create repo-local generated state;
-- copy missing repo-local templates into repo-owned locations;
+- copy or sync repo-local templates into repo-owned locations;
 - install or update tools only when the manifest explicitly marks the method as safe for this platform and the action does not require network, admin, global config, shell profile, PATH, plugin dependency, or MCP changes.
 
 ### `auto-with-approval`
@@ -100,7 +100,7 @@ If no marker exists, agents may copy missing files but must not delete, replace,
 
 - Do not invent versions, checksums, URLs, package names, or install methods.
 - Do not use `latest` for offline or pinned artifacts.
-- Every downloaded artifact must have a checksum unless the manifest marks the item as online-only and non-pinned.
+- Every downloaded artifact must have a checksum unless the manifest marks the item as non-pinned and online-only.
 - Every install/update command must have a matching verify command.
 - Disabled items stay disabled unless the user asks to enable them.
 
