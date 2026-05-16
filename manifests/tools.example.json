@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0",
+  "defaults": {
+    "install_if_missing": true,
+    "update_if_present": true,
+    "allow_prerelease": false,
+    "automation": "auto-safe"
+  },
+  "tools": [
+    {
+      "id": "opencode",
+      "display_name": "OpenCode",
+      "enabled": true,
+      "required": true,
+      "automation": "auto-safe",
+      "install_if_missing": true,
+      "update_if_present": true,
+      "version_policy": {
+        "minimum": "0.1.0",
+        "allow_newer": true
+      },
+      "detect": {
+        "argv": ["opencode", "--version"],
+        "expected_exit_code": 0
+      },
+      "install_methods": [
+        {
+          "id": "scoop",
+          "platform": "windows",
+          "automation": "auto-with-approval",
+          "requires_network": true,
+          "requires_admin": false,
+          "command": {
+            "argv": ["scoop", "install", "opencode"]
+          },
+          "notes": "Use only when Scoop is already installed or the user approves installing it."
+        },
+        {
+          "id": "choco",
+          "platform": "windows",
+          "automation": "auto-with-approval",
+          "requires_network": true,
+          "requires_admin": true,
+          "command": {
+            "argv": ["choco", "install", "opencode", "-y"]
+          },
+          "notes": "Requires admin on most Windows machines."
+        },
+        {
+          "id": "brew-tap",
+          "platform": "macos",
+          "automation": "auto-with-approval",
+          "requires_network": true,
+          "requires_admin": false,
+          "command": {
+            "argv": ["brew", "install", "anomalyco/tap/opencode"]
+          }
+        },
+        {
+          "id": "install-script",
+          "platform": "linux",
+          "automation": "auto-with-approval",
+          "requires_network": true,
+          "requires_admin": false,
+          "command": {
+            "argv": ["bash", "-lc", "curl -fsSL https://opencode.ai/install | bash"]
+          },
+          "notes": "Network install script requires approval and should be shown to the user before execution."
+        }
+      ],
+      "update_methods": [
+        {
+          "id": "opencode-upgrade",
+          "platform": "any",
+          "automation": "auto-with-approval",
+          "requires_network": true,
+          "requires_admin": false,
+          "command": {
+            "argv": ["opencode", "upgrade"]
+          },
+          "notes": "Upgrade may download binaries, so it is approval-gated."
+        }
+      ],
+      "verify": {
+        "argv": ["opencode", "--version"],
+        "expected_exit_code": 0
+      },
+      "notes": "Provider auth remains manual-required and is not represented as a tool install."
+    },
+    {
+      "id": "provider-auth",
+      "display_name": "OpenCode Provider Authentication",
+      "enabled": true,
+      "required": false,
+      "automation": "manual-required",
+      "install_if_missing": false,
+      "update_if_present": false,
+      "detect": {
+        "argv": ["opencode", "auth", "list"],
+        "expected_exit_code": 0,
+        "success_regex": "(?i)(anthropic|openai|github|google|azure|glm|credential|configured)"
+      },
+      "verify": {
+        "argv": ["opencode", "auth", "list"],
+        "expected_exit_code": 0,
+        "success_regex": "(?i)(anthropic|openai|github|google|azure|glm|credential|configured)"
+      },
+      "manual_instructions": "Run opencode auth login and complete the provider flow interactively. Do not store credentials in this repo.",
+      "notes": "If the command exits 0 but the success regex does not match, report auth as pending/manual-required, not failed."
+    }
+  ]
+}

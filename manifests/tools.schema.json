@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/opencode-bootstrap/tools.schema.json",
+  "title": "Tool Manifest",
+  "type": "object",
+  "required": ["schema_version", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "install_if_missing": { "type": "boolean" },
+        "update_if_present": { "type": "boolean" },
+        "allow_prerelease": { "type": "boolean" },
+        "automation": { "$ref": "#/$defs/automation" }
+      }
+    },
+    "tools": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tool" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "automation": {
+      "type": "string",
+      "enum": ["auto-safe", "auto-with-approval", "manual-required", "unsupported"]
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["windows", "wsl", "linux", "macos", "any"]
+    },
+    "command": {
+      "type": "object",
+      "required": ["argv"],
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "expected_exit_code": {
+          "type": "integer",
+          "default": 0
+        },
+        "success_regex": {
+          "type": "string"
+        }
+      }
+    },
+    "method": {
+      "type": "object",
+      "required": ["id", "platform", "automation", "command"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": { "requires_network": { "const": true } },
+            "required": ["requires_network"]
+          },
+          "then": {
+            "properties": {
+              "automation": { "enum": ["auto-with-approval", "manual-required", "unsupported"] }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "requires_admin": { "const": true } },
+            "required": ["requires_admin"]
+          },
+          "then": {
+            "properties": {
+              "automation": { "enum": ["auto-with-approval", "manual-required", "unsupported"] }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "platform": { "$ref": "#/$defs/platform" },
+        "automation": { "$ref": "#/$defs/automation" },
+        "requires_network": { "type": "boolean", "default": true },
+        "requires_admin": { "type": "boolean", "default": false },
+        "command": { "$ref": "#/$defs/command" },
+        "notes": { "type": "string" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["name", "url", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "target": { "type": "string" }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["id", "enabled", "required", "automation", "detect", "verify"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "display_name": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "required": { "type": "boolean" },
+        "automation": { "$ref": "#/$defs/automation" },
+        "install_if_missing": { "type": "boolean" },
+        "update_if_present": { "type": "boolean" },
+        "version_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minimum": { "type": "string" },
+            "pinned": { "type": "string" },
+            "allow_newer": { "type": "boolean", "default": true }
+          }
+        },
+        "detect": { "$ref": "#/$defs/command" },
+        "install_methods": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/method" }
+        },
+        "update_methods": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/method" }
+        },
+        "verify": { "$ref": "#/$defs/command" },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "manual_instructions": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
