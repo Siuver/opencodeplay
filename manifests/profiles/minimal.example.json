@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "id": "minimal",
+  "description": "Install or update OpenCode, sync repo-local OpenCode assets, and verify CLI availability without touching provider credentials.",
+  "platforms": ["windows", "wsl", "linux", "macos"],
+  "network": "optional",
+  "tools": ["opencode"],
+  "capabilities": ["opencode-local-assets"],
+  "manual_steps": [
+    "Provider authentication, if desired, must be completed by the user with opencode auth login."
+  ],
+  "approval_required": [
+    "Global package manager installation",
+    "Persistent PATH changes",
+    "Shell profile changes",
+    "Global OpenCode config changes"
+  ],
+  "success_criteria": [
+    "opencode --version exits successfully",
+    "Repo-local OpenCode assets are present in the declared target location",
+    "scripts/doctor reports no failed auto-safe items"
+  ]
+}
