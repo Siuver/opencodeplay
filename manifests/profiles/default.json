@@ -5,14 +5,15 @@
   "platforms": ["windows", "linux", "macos"],
   "network": "optional",
   "tools": ["opencode", "provider-auth"],
-  "capabilities": ["opencode-local-assets", "provider-auth"],
+  "capabilities": ["opencode-local-assets", "provider-auth", "opencode-dcp-plugin"],
   "manifest_refs": [
     "manifests/tools.json",
     "manifests/capabilities.json",
     "manifests/opencode.json"
   ],
   "manual_steps": [
-    "Provider authentication, if desired, must be completed by the user with opencode auth login."
+    "Provider authentication, if desired, must be completed by the user with opencode auth login.",
+    "Dynamic Context Pruning plugin installation requires explicit approval, OpenCode restart, then manual /dcp verification."
   ],
   "approval_required": [
     "Network installs and upgrades",
@@ -21,12 +22,14 @@
     "Shell profile changes",
     "Global OpenCode config changes",
     "Plugin dependency installation",
-    "MCP server changes"
+    "MCP server changes",
+    "Dynamic Context Pruning plugin install or update"
   ],
   "success_criteria": [
     "opencode --version exits successfully or is reported as blocked by approval/platform/network",
     "Repo-local OpenCode assets are copied only when missing or when ownership is proven",
     "Provider auth is reported as configured, pending/manual-required, or failed",
-    "scripts/doctor reports no failed auto-safe items"
+    "scripts/doctor reports no failed auto-safe items",
+    "Approval-gated DCP plugin work is reported as pending/manual until approved and verified"
   ]
 }

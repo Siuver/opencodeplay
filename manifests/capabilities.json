@@ -18,6 +18,18 @@
       "manifests": ["manifests/opencode.json"],
       "requires": ["opencode"],
       "manual_steps": ["Run opencode auth login interactively if provider auth is needed."]
+    },
+    {
+      "id": "opencode-dcp-plugin",
+      "description": "Declare the Dynamic Context Pruning OpenCode plugin and its project-local config while keeping install and verification approval-gated.",
+      "enabled": true,
+      "automation": "auto-with-approval",
+      "manifests": ["manifests/opencode.json"],
+      "requires": ["opencode"],
+      "manual_steps": [
+        "Approve networked plugin installation before running opencode plugin @tarquinen/opencode-dcp@3.1.12 --global.",
+        "Restart OpenCode after install, then verify with /dcp and /dcp context."
+      ]
     }
   ]
 }
