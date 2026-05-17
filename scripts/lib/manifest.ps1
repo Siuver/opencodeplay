@@ -90,7 +90,7 @@ function Test-OpenCodeVerifyStepShape {
     if (($names -contains "value") -eq ($names -contains "argv")) {
         $checks += New-DoctorCheck -Id "$Id.value-or-argv" -Status "fail" -Message "Verify step must contain exactly one of value or argv" -Path $Path
     }
-    if (($names -contains "kind") -and (@("directory-exists", "file-exists", "command") -notcontains $Step.kind)) {
+    if (($names -contains "kind") -and (@("directory-exists", "file-exists", "command", "manual") -notcontains $Step.kind)) {
         $checks += New-DoctorCheck -Id "$Id.kind" -Status "fail" -Message "Unsupported OpenCode verify step kind" -Path $Path
     }
     if ($names -contains "argv") {
@@ -212,9 +212,10 @@ function Test-ManifestSchemaShape {
             if ($null -eq $asset) { continue }
             $assetNames = Get-ObjectPropertyNames -Value $asset
             $assetId = Get-ManifestItemId -Value $asset -Fallback "index-$assetIndex"
-            $checks += Test-ManifestObjectShape -Value $asset -Required @("id", "type", "source", "target", "automation", "verify") -Allowed @("id", "type", "enabled", "source", "target", "automation", "merge_strategy", "requires_network", "verify", "notes") -Id "schema.opencode.asset.$assetId.shape" -Path $Path
+            $checks += Test-ManifestObjectShape -Value $asset -Required @("id", "type", "source", "target", "automation", "verify") -Allowed @("id", "type", "enabled", "source", "target", "automation", "merge_strategy", "requires_network", "package_name", "version", "install", "verify", "notes") -Id "schema.opencode.asset.$assetId.shape" -Path $Path
             if (($assetNames -contains "type") -and (@("agent", "skill", "plugin", "command", "tool", "theme", "config", "mcp") -notcontains $asset.type)) { $checks += New-DoctorCheck -Id "schema.opencode.asset.$assetId.type" -Status "fail" -Message "Unsupported OpenCode asset type" -Path $Path }
             if (($assetNames -contains "automation") -and ($automationValues -notcontains $asset.automation)) { $checks += New-DoctorCheck -Id "schema.opencode.asset.$assetId.automation" -Status "fail" -Message "Unsupported OpenCode asset automation class" -Path $Path }
+            if ($assetNames -contains "install") { $checks += Test-ManifestCommandShape -Command $asset.install -Id "schema.opencode.asset.$assetId.install" -Path $Path }
             foreach ($step in (Get-OptionalArray -Value $asset -Name "verify")) {
                 $checks += Test-OpenCodeVerifyStepShape -Step $step -Id "schema.opencode.asset.$assetId.verify" -Path $Path
             }
@@ -466,6 +467,10 @@ function Test-OpenCodeVerifySteps {
                 } else {
                     $checks += New-DoctorCheck -Id "opencode.asset.$assetId.verify.command" -Status "blocked" -Message "OpenCode asset command verify step did not pass" -Path $Path -Automation $automation -Data (ConvertTo-SafeCommandResult -Result $result)
                 }
+            } elseif ($kind -eq "manual") {
+                $message = "Manual verification is required"
+                if (Test-ObjectHasProperty -Value $step -Name "value") { $message = $step.value }
+                $checks += New-DoctorCheck -Id "opencode.asset.$assetId.verify.manual" -Status "manual" -Message $message -Path $Path -Automation $automation
             }
         }
         $assetIndex++

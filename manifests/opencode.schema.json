@@ -110,6 +110,9 @@
           "enum": ["copy-if-missing", "sync-owned", "replace-with-approval"]
         },
         "requires_network": { "type": "boolean", "default": false },
+        "package_name": { "type": "string" },
+        "version": { "type": "string" },
+        "install": { "$ref": "#/$defs/command" },
         "verify": {
           "type": "array",
           "items": { "$ref": "#/$defs/verify_step" },
@@ -137,6 +140,20 @@
           "minItems": 1,
           "items": { "type": "string" }
         },
+        "success_regex": { "type": "string" }
+      }
+    },
+    "command": {
+      "type": "object",
+      "required": ["argv"],
+      "additionalProperties": false,
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "expected_exit_code": { "type": "integer" },
         "success_regex": { "type": "string" }
       }
     },

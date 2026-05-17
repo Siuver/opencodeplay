@@ -93,6 +93,49 @@
       "notes": "Theme templates are optional local assets and should be copied only when missing."
     },
     {
+      "id": "dcp-project-config",
+      "type": "config",
+      "enabled": true,
+      "source": "templates/opencode/dcp.jsonc",
+      "target": ".opencode/dcp.jsonc",
+      "automation": "auto-safe",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": false,
+      "verify": [
+        {
+          "kind": "file-exists",
+          "value": ".opencode/dcp.jsonc"
+        }
+      ],
+      "notes": "Project-local DCP config is tracked with autoUpdate disabled so the repo remains the source of truth."
+    },
+    {
+      "id": "opencode-dcp",
+      "type": "plugin",
+      "enabled": true,
+      "source": "templates/opencode/plugins/opencode-dcp.md",
+      "target": ".opencode/plugins/opencode-dcp.md",
+      "automation": "auto-with-approval",
+      "merge_strategy": "copy-if-missing",
+      "requires_network": true,
+      "package_name": "@tarquinen/opencode-dcp",
+      "version": "3.1.12",
+      "install": {
+        "argv": ["opencode", "plugin", "@tarquinen/opencode-dcp@3.1.12", "--global"]
+      },
+      "verify": [
+        {
+          "kind": "file-exists",
+          "value": ".opencode/plugins/opencode-dcp.md"
+        },
+        {
+          "kind": "manual",
+          "value": "After approved install and OpenCode restart, run /dcp and /dcp context inside OpenCode."
+        }
+      ],
+      "notes": "DCP is AGPL-3.0-or-later and may install through Bun/npm, write global OpenCode plugin config, register /dcp, expose a compress tool, and change effective OpenCode permissions."
+    },
+    {
       "id": "local-plugins",
       "type": "plugin",
       "enabled": false,
